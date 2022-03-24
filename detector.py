@@ -3,6 +3,7 @@ import time
 import multiprocessing
 from multiprocessing import Process
 from encode_decode import encode_dict, decode_dict
+import numpy as np
 
 
 class Detector:
@@ -10,8 +11,10 @@ class Detector:
     单个detector
     """
     def __init__(self, index):
+        self.index = index
         self.detector_state = {}    # detector_state记录了当前单个detector的各种信息
         self.detector_state.update({'detector_id': index})
+        self.q = []
 
     def update_state(self):
         """
@@ -25,16 +28,16 @@ class Detector:
         sk.connect(('127.0.0.1', 8009))
         
         while True:
-            # TODO 接收controller的控制信号
-            msg = decode_dict(sk.recv(115200))
-            print(msg)
-            
-            # TODO 更新自己的状态信息
-            self.update_state()
-            
             # TODO 返回当前状态信息
             sk.send(encode_dict(self.detector_state))
+    
+            print('detector', self.index, 'img queue len is', len(self.q))
             time.sleep(2)
+            
+            # TODO 接收controller的控制信号
+            recv_dict = decode_dict(sk.recv(115200))
+            if 'img' in recv_dict:
+                self.q.append(recv_dict['img'])
         
         sk.close()
 

@@ -1,6 +1,9 @@
 import socketserver
+import time
+from multiprocessing import Queue
 from typing import Any
 from encode_decode import encode_dict, decode_dict
+import numpy as np
 
 
 class Controller(socketserver.BaseRequestHandler):
@@ -28,17 +31,21 @@ class Controller(socketserver.BaseRequestHandler):
 
     def handle(self):
         conn = self.request
-        conn.sendall(encode_dict({'i am controller': 0}))
+        interval = 0.5
+        t = time.time()
+
         while True:
             # TODO 接收detector的状态信息
-            recv_state_dict = decode_dict(conn.recv(115200))
-            print(recv_state_dict)
+            recv_dict = decode_dict(conn.recv(115200))
             
             # TODO 更新controller_state
-            self.update_state_table(recv_state_dict)
-            
-            action = self.get_action()
-            conn.sendall(encode_dict(action))
+            self.update_state_table(recv_dict)
+            send_dict = self.get_action()
+
+            if time.time() - t >= interval:
+                send_dict.update({'img': np.zeros(shape=(28, 28)).tolist()})
+                t = time.time()
+            conn.sendall(encode_dict(send_dict))
 
 
 if __name__ == "__main__":
