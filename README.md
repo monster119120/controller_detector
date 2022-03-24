@@ -1,0 +1,1 @@
+controller和detectors之间的通信都用字典。
