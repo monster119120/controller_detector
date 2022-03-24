@@ -37,7 +37,7 @@ class Detector:
             # TODO 接收controller的控制信号
             recv_dict = decode_dict(sk.recv(115200))
             if 'img' in recv_dict:
-                self.q.append(recv_dict['img'])
+                self.q.append(np.array(recv_dict['img']))
         
         sk.close()
 
